@@ -81,9 +81,9 @@ onload="init();"
                             {% endif %}
                         </td>
 						<td>{{ r.text }}</td>
-                            {% if r.question.type == 'essay' %}
-                                <td>Great job</td>
-                            {% endif %}
+                        {% if r.question.type == 'essay' %}
+                            <td>{{ r.feedback|default:"" }}</td>
+                        {% endif %}
 						<td>{{ r.get_score_percent }}%</td>
 					</tr>
 			{% endfor %}
@@ -116,7 +116,7 @@ onload="init();"
                     <p><strong>{% trans 'Quiz' %}: </strong>{{ quiz.title|title_lang:LANGUAGE_CODE }}</p>
                     <p><strong>{% trans 'Question' %}: </strong>?</p>
                     <p><strong>{% trans 'Completed on' %}: </strong>{{ a.submitted_date }}</p>
-                    <hr>
+                    <br>
                      <table class="table">
                             <tr>
                               <th>{% trans 'Question' %}</th>
@@ -128,7 +128,13 @@ onload="init();"
                             </tr>
                             <tr>
                               <th>{% trans 'Feedback' %}</th>
-                              <td>Feedback</td>
+                              <td>
+                                <textarea class="form-control" rows="3" placeholder="Question feedback">{{ r.feedback|default:"" }}</textarea>
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>{% trans 'Score' %}</th>
+                              <td><input class="form-control" type="text" id="formGroupInputSmall" placeholder="Question score" value="{{ r.score }}"></td>
                             </tr>
                      </table>
                   </div>
