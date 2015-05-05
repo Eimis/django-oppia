@@ -8,6 +8,8 @@ from django.core.urlresolvers import reverse
 from django.forms.extras.widgets import SelectDateWidget
 from django.utils.translation import ugettext_lazy as _
 
+from oppia.quiz.models import QuizAttemptResponse
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import FieldWithButtons
 from crispy_forms.layout import Button, Layout, Fieldset, ButtonHolder, Submit, Div, HTML, Row
@@ -217,3 +219,13 @@ class DateRangeIntervalForm(forms.Form):
             raise forms.ValidationError("Start date must be before the end date.")
         
         return cleaned_data     
+
+
+class QuizAttemptResponseForm(forms.ModelForm):
+
+    class Meta:
+        model = QuizAttemptResponse
+        fields = ['score', 'feedback']
+        widgets = {
+            'id': forms.HiddenInput(),
+        }

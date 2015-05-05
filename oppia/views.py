@@ -15,13 +15,15 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.urlresolvers import reverse
 from django.db.models import Q, Count
 from django.forms.formsets import formset_factory
+from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import render,render_to_response
+from django.shortcuts import redirect
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
-from oppia.forms import UploadCourseStep1Form, UploadCourseStep2Form, ScheduleForm, DateRangeForm, DateRangeIntervalForm
+from oppia.forms import UploadCourseStep1Form, UploadCourseStep2Form, ScheduleForm, DateRangeForm, DateRangeIntervalForm,QuizAttemptResponseForm
 from oppia.forms import ActivityScheduleForm, CohortForm
 from oppia.models import Course, Tracker, Tag, CourseTag, Schedule, CourseManager
 from oppia.models import ActivitySchedule, Activity, Cohort, Participant, Points 
@@ -734,6 +736,16 @@ def course_quiz_attempts(request,course_id,quiz_id):
     quiz = Quiz.objects.get(pk=quiz_id)
     attempts = QuizAttempt.objects.filter(quiz=quiz).order_by('-attempt_date')
     
+    attempt_response_forms = QuizAttemptResponse.objects.filter(
+        quizattempt__in=attempts
+    )
+    QuizAttemptResponseFormset = modelformset_factory(
+        QuizAttemptResponse,
+        form=QuizAttemptResponseForm,
+        extra=0,
+    )
+    formset = QuizAttemptResponseFormset(queryset=attempt_response_forms)
+
     paginator = Paginator(attempts, 25)
     # Make sure page request is an int. If not, deliver first page.
     try:
@@ -750,7 +762,24 @@ def course_quiz_attempts(request,course_id,quiz_id):
         tracks = paginator.page(paginator.num_pages)
     print  len(attempts)
     nav = get_nav(course,request.user)
-    return render_to_response('oppia/course/quiz-attempts.html',{'course': course,'nav': nav, 'quiz':quiz, 'page':attempts}, context_instance=RequestContext(request))
+    if request.method == 'POST':
+        formset = QuizAttemptResponseFormset(request.POST)
+        if formset.is_valid():
+            formset.save()
+            return redirect(reverse('oppia_course_quiz_attempts', kwargs={
+                'course_id': course_id,
+                'quiz_id': quiz_id,
+            }))
+
+    return render_to_response(
+        'oppia/course/quiz-attempts.html',
+        {
+            'course': course,
+            'nav': nav,
+            'quiz':quiz,
+            'page':attempts,
+            'formset': formset,
+        }, context_instance=RequestContext(request))
 
 def course_feedback(request,course_id):
     course = check_owner(request,course_id)
