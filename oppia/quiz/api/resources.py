@@ -13,6 +13,7 @@ from tastypie.authorization import Authorization
 from tastypie.exceptions import NotFound, BadRequest, InvalidFilterError, HydrationError, InvalidSortError, ImmediateHttpResponse
 from tastypie.models import ApiKey
 from tastypie.resources import ModelResource
+from tastypie.resources import ALL_WITH_RELATIONS
 
 from oppia.models import Points, Award
 from oppia.api.resources import UserResource
