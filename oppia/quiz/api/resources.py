@@ -13,6 +13,7 @@ from tastypie.authorization import Authorization
 from tastypie.exceptions import NotFound, BadRequest, InvalidFilterError, HydrationError, InvalidSortError, ImmediateHttpResponse
 from tastypie.models import ApiKey
 from tastypie.resources import ModelResource
+from tastypie.resources import ALL_WITH_RELATIONS
 
 from oppia.models import Points, Award
 from oppia.api.resources import UserResource
@@ -241,11 +242,15 @@ class QuizAttemptResource(ModelResource):
     class Meta:
         queryset = QuizAttempt.objects.all()
         resource_name = 'quizattempt'
-        allowed_methods = ['post']
+        allowed_methods = ['post', 'get']
         authentication = ApiKeyAuthentication()
         authorization = Authorization() 
         always_return_data = True 
         serializer = QuizAttemptJSONSerializer()
+        filtering = {
+            "quiz": ALL_WITH_RELATIONS,
+            "user": ALL_WITH_RELATIONS,
+        }
         
     def hydrate(self, bundle, request=None):
         bundle.obj.user = User.objects.get(pk = bundle.request.user.id)
@@ -281,3 +286,13 @@ class QuizAttemptResource(ModelResource):
         badges = Award.get_userawards(bundle.request.user)
         return badges
     
+    def get_object_list(self, request):
+        if request.GET.get('latest'):
+            result = super(
+                QuizAttemptResource, self
+                ).get_object_list(request).order_by('-attempt_date')
+            return result
+        else:
+            result = super(QuizAttemptResource, self).get_object_list(request)
+
+        return result
